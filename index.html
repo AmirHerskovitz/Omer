@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌙 יומן השינה של עומר</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#312e81">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner">
+      <div class="spinner-moon">🌙</div>
+      <div class="spinner-text">טוען נתונים...</div>
+    </div>
+  </div>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <span class="moon">🌙</span>
+        <span>השינה של עומר</span>
+        <span class="subtitle" style="opacity:0.6; font-weight:400; font-size:0.8rem;"> | מעקב שינה</span>
+      </div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="dashboard">📊 דשבורד</button>
+        <button class="nav-tab" data-tab="analysis">🔬 ניתוח</button>
+        <button class="nav-tab" data-tab="tips">📖 טיפים</button>
+        <button class="nav-tab" data-tab="logger">📝 יומן חדש</button>
+      </div>
+    </div>
+    <!-- Live data status bar -->
+    <div class="status-bar" id="statusBar">
+      <span id="statusText">⏳ טוען...</span>
+      <button class="refresh-btn" id="refreshBtn" title="רענן נתונים">🔄</button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- ===== Dashboard Tab ===== -->
+    <div id="dashboard" class="tab-content active">
+
+      <!-- Summary Stats -->
+      <div class="summary-grid" id="summaryGrid">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+
+        <div class="chart-card">
+          <div class="chart-title">⏱️ זמן הרדמה</div>
+          <div class="chart-subtitle">דקות מהשכבה ועד שנרדם</div>
+          <div class="chart-wrapper">
+            <canvas id="settlingChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">🤲 הרמות בהרדמה</div>
+          <div class="chart-subtitle">כמה פעמים הורם להרגעה בהשכבה</div>
+          <div class="chart-wrapper">
+            <canvas id="pickupsChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">🌃 יקיצות לילה</div>
+          <div class="chart-subtitle">מספר יקיצות בכל לילה</div>
+          <div class="chart-wrapper">
+            <canvas id="wakingsChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">😴 רצף שינה ארוך ביותר</div>
+          <div class="chart-subtitle">השינה הרציפה הארוכה ביותר בלילה (שעות)</div>
+          <div class="chart-wrapper">
+            <canvas id="stretchChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">🍼 מרווח הנקה ראשונה</div>
+          <div class="chart-subtitle">שעות מהשכבה ועד ההנקה הראשונה בלילה</div>
+          <div class="chart-wrapper">
+            <canvas id="nursingChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">🌅 שעת יקיצת בוקר</div>
+          <div class="chart-subtitle">מתי עומר קם בבוקר</div>
+          <div class="chart-wrapper">
+            <canvas id="morningChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== Analysis Tab ===== -->
+    <div id="analysis" class="tab-content">
+
+      <!-- Settler Analysis -->
+      <div class="analysis-section">
+        <h2 class="section-title">👨‍👩‍👦 ניתוח לפי הורה</h2>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">🥧 חלוקת הרדמות ערב</div>
+            <div class="chart-subtitle">מי הרדים בהשכבה ראשונה של הלילה</div>
+            <div class="chart-wrapper">
+              <canvas id="settlerPieChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">🌃 חלוקת יקיצות לילה</div>
+            <div class="chart-subtitle">מי טיפל ביקיצות במהלך הלילה</div>
+            <div class="chart-wrapper">
+              <canvas id="wakingSettlerChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sleep Quality -->
+      <div class="analysis-section">
+        <h2 class="section-title">💤 איכות שינה</h2>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">🕐 שעת השכבה</div>
+            <div class="chart-subtitle">מגמת שעת ההשכבה לאורך התהליך</div>
+            <div class="chart-wrapper">
+              <canvas id="bedtimeChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">😴 שעות שינה כוללות</div>
+            <div class="chart-subtitle">סה״כ שעות שינה בכל לילה</div>
+            <div class="chart-wrapper">
+              <canvas id="totalSleepChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">🍼 הנקות בלילה</div>
+            <div class="chart-subtitle">כמות הנקות בכל לילה</div>
+            <div class="chart-wrapper">
+              <canvas id="nursingCountChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">⭐ הרדמה עצמאית</div>
+            <div class="chart-subtitle">מעקב הרדמות ללא מגע כלל</div>
+            <div class="chart-wrapper">
+              <canvas id="independentChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparisons -->
+      <div class="analysis-section">
+        <h2 class="section-title">📊 השוואות</h2>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">🚨 השפעת אזעקות</div>
+            <div class="chart-subtitle">לילות עם אזעקה לעומת לילות ללא</div>
+            <div class="chart-wrapper" style="height:auto; min-height:200px;">
+              <div id="alarmImpactTable"></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">📈 שלב 1 מול שלב 2</div>
+            <div class="chart-subtitle">השוואת מדדים בין שלבי התהליך</div>
+            <div class="chart-wrapper" style="height:auto; min-height:200px;">
+              <div id="stageCompareTable"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== Tips Tab ===== -->
+    <div id="tips" class="tab-content">
+      <div class="tips-container">
+
+        <!-- Tips Summary -->
+        <div id="tipsSummary"></div>
+
+        <!-- Status Filter -->
+        <div class="tips-filter-bar" id="tipsStatusFilter">
+          <button class="status-filter-btn active" data-status="all">הכל</button>
+          <button class="status-filter-btn" data-status="not-started">⚪ לא התחלנו</button>
+          <button class="status-filter-btn" data-status="working">🟡 עובדים על זה</button>
+          <button class="status-filter-btn" data-status="mastered">🟢 הוטמע</button>
+        </div>
+
+        <!-- Search -->
+        <div class="tips-search-bar">
+          <input type="text" id="tipsSearch" placeholder="🔍 חיפוש טיפים..." class="tips-search-input">
+        </div>
+
+        <!-- Categories -->
+        <div class="tips-categories" id="tipsCategories"></div>
+
+        <!-- Tips List -->
+        <div class="tips-list" id="tipsList"></div>
+      </div>
+    </div>
+
+    <!-- ===== Logger Tab ===== -->
+    <div id="logger" class="tab-content">
+      <div class="logger-container">
+
+        <!-- Night Info -->
+        <div class="form-section">
+          <div class="form-section-title">🌙 פרטי הלילה</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>תאריך</label>
+              <input type="date" id="logDate">
+            </div>
+            <div class="form-group">
+              <label>שלב בתהליך</label>
+              <div class="toggle-group" id="stageToggle">
+                <button class="toggle-btn" data-value="1">שלב 1</button>
+                <button class="toggle-btn active" data-value="2">שלב 2</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bedtime Settling -->
+        <div class="form-section">
+          <div class="form-section-title">🛏️ הרדמת ערב</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>שעת השכבה</label>
+              <input type="time" id="logBedtime">
+            </div>
+            <div class="form-group">
+              <label>מתי נרדם</label>
+              <input type="time" id="logFellAsleep">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>מי הרדים</label>
+              <div class="toggle-group" id="settlerToggle">
+                <button class="toggle-btn active" data-value="דור">דור</button>
+                <button class="toggle-btn" data-value="אמיר">אמיר</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>הרמות להרגעה</label>
+              <div class="stepper">
+                <button class="stepper-btn" data-action="dec" data-target="pickupCount">−</button>
+                <span class="stepper-value" id="pickupCount">0</span>
+                <button class="stepper-btn" data-action="inc" data-target="pickupCount">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>עוצמת בכי</label>
+              <div class="toggle-group" id="cryToggle">
+                <button class="toggle-btn" data-value="none">😴 אין</button>
+                <button class="toggle-btn" data-value="fuss">😤 התבכיינות</button>
+                <button class="toggle-btn" data-value="cry">😢 בכי</button>
+                <button class="toggle-btn" data-value="hysterical">😭 היסטרי</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>סוג מגע</label>
+              <div class="toggle-group" id="touchToggle">
+                <button class="toggle-btn" data-value="none">ללא מגע</button>
+                <button class="toggle-btn" data-value="static">יד סטטית</button>
+                <button class="toggle-btn" data-value="patting">טפיחות</button>
+                <button class="toggle-btn" data-value="holding">החזקה</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>תנוחת השכבה</label>
+              <div class="toggle-group" id="positionToggle">
+                <button class="toggle-btn" data-value="back">גב</button>
+                <button class="toggle-btn" data-value="belly">בטן</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>דגלים</label>
+              <div class="toggle-group" id="flagsToggle">
+                <button class="toggle-btn" data-value="selfSoothed">נרדם עצמאית ⭐</button>
+                <button class="toggle-btn" data-value="alarm">אזעקה 🚨</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label>הערות</label>
+              <textarea id="logSettlingNotes" placeholder="פירוט על ההרדמה..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Night Wakings -->
+        <div class="form-section">
+          <div class="form-section-title">🌃 יקיצות לילה</div>
+          <div id="wakingsContainer">
+            <!-- Dynamic waking blocks inserted here -->
+          </div>
+          <button class="add-waking-btn" id="addWakingBtn">+ הוסף יקיצה</button>
+        </div>
+
+        <!-- Relevant Tips Widget -->
+        <div id="relevantTipsContainer"></div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button class="btn btn-primary btn-block" id="saveNightBtn">💾 שמור לילה</button>
+          <button class="btn btn-secondary" id="clearFormBtn">🗑️ נקה טופס</button>
+          <button class="btn btn-secondary" id="exportCsvBtn">📥 ייצא CSV</button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="js/csv-parser.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/tips.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/logger.js"></script>
+  <script>
+    // Tab switching
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Fetch live data from Google Sheet
+      const overlay = document.getElementById('loadingOverlay');
+      const statusText = document.getElementById('statusText');
+      const refreshBtn = document.getElementById('refreshBtn');
+
+      async function loadData() {
+        try {
+          statusText.textContent = '⏳ טוען נתונים מהגיליון...';
+          const result = await fetchLiveData();
+
+          if (result.nights && result.nights.length > 0) {
+            setLiveNights(result.nights);
+            const ts = getLiveDataTimestamp();
+            const count = result.nights.length;
+            if (result.fromCache) {
+              statusText.textContent = `📋 ${count} לילות (מטמון) | עדכון: ${formatTimestamp(ts)}`;
+            } else {
+              statusText.textContent = `✅ ${count} לילות מעודכנים | ${formatTimestamp(ts)}`;
+            }
+          } else {
+            statusText.textContent = '📦 נתונים מקומיים (אין חיבור לגיליון)';
+          }
+        } catch (err) {
+          statusText.textContent = '⚠️ שגיאה בטעינה — נתונים מקומיים';
+        }
+
+        // Init all modules
+        initDashboard();
+        initAnalysis();
+        initTips();
+        initLogger();
+        overlay.classList.add('hidden');
+      }
+
+      await loadData();
+
+      // Refresh button
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.classList.add('spinning');
+        await loadData();
+        refreshBtn.classList.remove('spinning');
+      });
+    });
+  </script>
+
+</body>
+</html>

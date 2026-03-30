@@ -1,0 +1,5 @@
+node_modules/
+test_live.csv
+.DS_Store
+_chat.txt
+*.csv
